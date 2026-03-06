@@ -1,0 +1,1407 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suzhou Xiao Liu × Chuan Yue Hai Tang · Scenario Comparison Gantt</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F5F7;--surface:#FFF;--surf2:#F8F9FB;
+  --border:#E4E7EC;--border2:#CBD5E0;
+  --text:#111827;--dim:#4B5563;--muted:#9CA3AF;
+  --blue:#2563EB;--green:#16A34A;--red:#DC2626;
+  --orange:#EA580C;--purple:#7C3AED;
+  --ph-bg:#EFF6FF;--topbar:#0F172A;
+  --col-num:40px;--col-name:240px;--col-range:120px;
+  --row-h:36px;--ph-h:30px;
+  --day-w:13px;
+  --hdr1:26px;--hdr2:26px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:80;height:48px;background:var(--topbar);
+  display:flex;align-items:center;gap:8px;padding:0 16px;user-select:none}
+.tb-dot{width:10px;height:10px;border-radius:50%;background:#3B82F6;flex-shrink:0}
+[contenteditable]{outline:none;cursor:text}
+[contenteditable]:focus{background:rgba(255,255,255,.08);border-radius:3px;padding:1px 3px}
+.tb-title{color:#F1F5F9;font-size:13px;font-weight:700;white-space:nowrap}
+.tb-meta{color:#64748B;font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap}
+.tb-sep{width:1px;height:20px;background:#1E293B;flex-shrink:0}
+.tb-tabs{display:flex;gap:2px;background:#1E293B;border-radius:6px;padding:3px}
+.tb-tab{padding:4px 14px;border-radius:4px;font-size:11px;font-weight:600;
+  cursor:pointer;color:#64748B;white-space:nowrap;transition:all .15s}
+.tb-tab.on{background:#2563EB;color:#fff}
+.tb-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tb-btn{height:28px;padding:0 10px;border-radius:5px;border:1px solid #334155;
+  background:transparent;color:#94A3B8;font-size:11px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;
+  font-family:inherit;white-space:nowrap}
+.tb-btn:hover{background:#1E293B;color:#E2E8F0;border-color:#475569}
+.tb-btn.primary{background:#2563EB;border-color:#2563EB;color:#fff}
+.tb-btn.primary:hover{background:#1D4ED8}
+.tb-btn.danger{background:transparent;border-color:#7F1D1D;color:#F87171}
+.tb-btn.danger:hover{background:#7F1D1D;color:#fff}
+
+/* LEGEND */
+.legend-bar{display:flex;align-items:center;gap:14px;padding:7px 16px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  font-size:11px;color:var(--dim);flex-wrap:wrap}
+.l-item{display:flex;align-items:center;gap:5px}
+.l-sw{width:20px;height:8px;border-radius:2px}
+.l-tbc{width:20px;height:8px;border-radius:2px;
+  background:repeating-linear-gradient(-45deg,#93C5FD,#93C5FD 3px,#DBEAFE 3px,#DBEAFE 6px)}
+.l-dia{width:9px;height:9px;border-radius:2px;transform:rotate(45deg);flex-shrink:0;background:#D97706}
+.l-wknd{width:20px;height:8px;border-radius:2px;background:#F1F5F9;border:1px solid var(--border)}
+.l-right{margin-left:auto;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* INFO BOX */
+.info-box{margin:8px 14px 4px;padding:9px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:20px}
+.info-desc{font-size:12px;color:var(--dim);line-height:1.6;flex:1;
+  border-radius:4px;padding:2px 4px;transition:background .15s}
+.info-desc:hover{background:#F0F7FF}
+.info-desc:focus{background:#EFF6FF;border:1px solid var(--blue);outline:none}
+.info-desc strong{color:var(--text)}
+.info-kpis{display:flex;gap:16px;flex-shrink:0}
+.kpi{text-align:center;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s}
+.kpi:hover{background:#F0F7FF}
+.kpi-v{font-size:16px;font-weight:700;line-height:1.2}
+.kpi-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+/* CHART SHELL */
+.chart-wrap{margin:0 14px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.chart-scroll{overflow-x:auto;overflow-y:visible}
+.chart-scroll::-webkit-scrollbar{height:5px}
+.chart-scroll::-webkit-scrollbar-track{background:var(--surf2)}
+.chart-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.chart-inner{display:flex;min-width:max-content}
+
+/* LEFT PANEL */
+.left-panel{display:flex;flex-direction:column;flex-shrink:0;
+  position:sticky;left:0;z-index:30;background:var(--surface);
+  border-right:2px solid var(--border2);
+  width:calc(var(--col-num) + var(--col-name) + var(--col-range))}
+.lp-hdr{display:flex;align-items:flex-end;
+  height:calc(var(--hdr1) + var(--hdr2));
+  border-bottom:2px solid var(--border2);background:var(--surf2);flex-shrink:0;
+  position:sticky;top:0;z-index:31}
+.lp-hcell{height:100%;display:flex;align-items:flex-end;
+  padding:0 8px 6px;font-size:10px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  border-right:1px solid var(--border)}
+.lp-hcell.num{width:var(--col-num);justify-content:center}
+.lp-hcell.name{width:var(--col-name);flex:0 0 var(--col-name)}
+.lp-hcell.range{width:var(--col-range);border-right:none}
+
+.lp-row{display:flex;align-items:center;border-bottom:1px solid var(--border);
+  flex-shrink:0;height:var(--row-h);position:relative}
+.lp-row.clickable{cursor:pointer;transition:background .1s}
+.lp-row.clickable:hover{background:#F0F7FF}
+.lp-row.ph-row{height:var(--ph-h);background:var(--ph-bg);
+  border-left:3px solid var(--blue);cursor:pointer}
+.lp-row.ph-row:hover{background:#E0EDFF}
+
+/* delete btn that appears on hover */
+.del-btn{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;border-radius:4px;
+  background:#FEE2E2;color:#DC2626;border:none;
+  font-size:12px;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  flex-shrink:0;z-index:5;
+  transition:background .12s;
+  line-height:1;
+}
+.lp-row:hover .del-btn{display:flex}
+.del-btn:hover{background:#FCA5A5}
+
+.lp-cell{height:100%;display:flex;align-items:center;
+  padding:0 8px;overflow:hidden;border-right:1px solid var(--border);flex-shrink:0}
+.lp-cell.num{width:var(--col-num);justify-content:center;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.lp-cell.name{width:var(--col-name);flex:0 0 var(--col-name);font-size:12px;gap:6px}
+.lp-cell.range{width:var(--col-range);border-right:none;
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);white-space:nowrap}
+.ph-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)}
+.tbc-badge{display:inline-flex;align-items:center;padding:1px 5px;border-radius:3px;
+  font-size:9px;font-weight:700;background:#FEF3C7;color:#92400E;
+  letter-spacing:.03em;flex-shrink:0;margin-left:4px}
+.n-dot{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+.n-dot.ms{transform:rotate(45deg)}
+
+/* DRAG HANDLE for row reordering */
+.drag-handle{
+  width:16px;height:100%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:grab;color:#D1D5DB;font-size:13px;
+  opacity:0;transition:opacity .12s;
+  user-select:none;
+}
+.lp-row:hover .drag-handle{opacity:1}
+.drag-handle:hover{color:#9CA3AF}
+.drag-handle:active{cursor:grabbing}
+/* row being dragged */
+.lp-row.dragging{opacity:.35;background:#EFF6FF}
+/* drop indicator */
+.drop-indicator{
+  height:2px;background:var(--blue);
+  margin:0;border-radius:1px;
+  pointer-events:none;
+  box-shadow:0 0 4px rgba(37,99,235,.4);
+}
+
+/* ADD ROW BUTTON */
+.add-row-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  height:32px;border:none;background:transparent;
+  color:var(--muted);font-size:11px;font-family:inherit;cursor:pointer;
+  width:100%;border-top:1px dashed var(--border);
+  transition:all .15s;
+}
+.add-row-btn:hover{background:#F0F7FF;color:var(--blue)}
+
+/* TIMELINE */
+.tl-panel{flex:1;position:relative;min-width:0}
+.tl-mhdr{height:var(--hdr1);display:flex;background:var(--surf2);
+  border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:20}
+.tl-dhdr{height:var(--hdr2);display:flex;background:var(--surface);
+  border-bottom:2px solid var(--border2);position:sticky;top:var(--hdr1);z-index:19}
+.m-cell{border-right:1px solid var(--border2);display:flex;align-items:center;
+  padding-left:5px;font-size:10px;font-weight:700;color:var(--text);
+  white-space:nowrap;overflow:hidden;flex-shrink:0}
+.d-cell{width:var(--day-w);flex-shrink:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-size:6.5px;color:var(--muted);border-right:1px solid transparent;line-height:1.2}
+.d-cell.wknd{background:#F8FAFC}
+.d-cell.wk-start{border-left:1px solid var(--border)}
+.d-cell .dn{font-weight:600;color:var(--dim);font-size:7px}
+.d-cell .dd{color:var(--muted)}
+
+.g-row{height:var(--row-h);border-bottom:1px solid var(--border);
+  position:relative;display:flex;flex-shrink:0}
+.g-row.ph-row{height:var(--ph-h);background:var(--ph-bg)}
+.g-row.add-row{height:32px;border-top:1px dashed var(--border);border-bottom:none}
+.g-day{width:var(--day-w);flex-shrink:0;border-right:1px solid transparent}
+.g-day.wknd{background:rgba(241,245,249,.7)}
+.g-day.wk-start{border-left:1px solid var(--border)}
+
+.bar{position:absolute;height:20px;top:8px;border-radius:3px;cursor:grab;
+  display:flex;align-items:center;padding:0 5px;
+  font-size:9.5px;font-weight:500;color:#fff;
+  white-space:nowrap;overflow:hidden;user-select:none;z-index:4;
+  transition:box-shadow .12s,filter .12s}
+.bar:hover{filter:brightness(1.07);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.bar.tbc{background-image:repeating-linear-gradient(-45deg,
+  transparent,transparent 3px,rgba(255,255,255,.22) 3px,rgba(255,255,255,.22) 6px);
+  color:rgba(255,255,255,.9)}
+.bar-rz{position:absolute;right:0;top:0;bottom:0;width:4px;
+  cursor:ew-resize;opacity:0;transition:opacity .12s;
+  background:rgba(255,255,255,.3);border-radius:0 3px 3px 0}
+.bar:hover .bar-rz{opacity:1}
+
+.ms-dia{position:absolute;width:11px;height:11px;top:13px;
+  transform:translateX(-50%) rotate(45deg);border-radius:2px;
+  z-index:5;cursor:pointer;transition:transform .12s}
+.ms-dia:hover{transform:translateX(-50%) rotate(45deg) scale(1.3)}
+
+.a-band{position:absolute;top:0;bottom:0;pointer-events:none;z-index:1}
+.a-band-fill{position:absolute;inset:0}
+.a-band-lbl{position:absolute;top:3px;left:4px;font-size:8px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+
+.today-line{position:absolute;top:0;bottom:0;width:2px;
+  background:var(--blue);opacity:.5;z-index:6;pointer-events:none}
+.today-lbl{position:absolute;top:2px;left:3px;font-size:7px;font-weight:700;
+  letter-spacing:.05em;color:var(--blue);white-space:nowrap}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;
+  background:rgba(15,23,42,.35);z-index:200;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:10px;padding:20px 22px;width:400px;
+  box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid var(--border)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-head h3{font-size:13px;font-weight:700}
+.modal-close{cursor:pointer;color:var(--muted);font-size:16px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);margin-bottom:3px}
+.field input,.field textarea,.field select{
+  width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:5px;
+  font-family:inherit;font-size:12px;color:var(--text);
+  background:var(--surf2);outline:none;transition:border-color .12s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);background:#fff}
+.field-row{display:flex;gap:8px}
+.field-row .field{flex:1}
+.color-row{display:flex;gap:6px;flex-wrap:wrap}
+.color-swatch{width:22px;height:22px;border-radius:4px;cursor:pointer;
+  border:2px solid transparent;transition:all .12s}
+.color-swatch.sel{border-color:var(--text);transform:scale(1.15)}
+.modal-btns{display:flex;gap:7px;justify-content:flex-end;margin-top:14px}
+.btn{padding:6px 14px;border-radius:5px;font-size:12px;font-weight:600;
+  cursor:pointer;border:none;transition:all .12s;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#1D4ED8}
+.btn-danger{background:#FEE2E2;color:#DC2626;border:1px solid #FECACA}
+.btn-danger:hover{background:#FCA5A5}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surf2)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:#1E293B;color:#E2E8F0;padding:10px 18px;border-radius:8px;
+  font-size:12px;font-weight:500;z-index:400;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .25s;
+  opacity:0;pointer-events:none;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+.tip{position:fixed;z-index:300;background:#1E293B;color:#E2E8F0;
+  padding:7px 10px;border-radius:6px;font-size:11px;line-height:1.55;
+  pointer-events:none;display:none;max-width:240px;white-space:pre-wrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-dot"></div>
+  <div class="tb-title" id="tbTitle" contenteditable="true" spellcheck="false">SXL × CYHT</div>
+  <div class="tb-meta" id="tbMeta">Option A · CYHT Open End-Sep · 2026/03 → 2026/10</div>
+  <div class="tb-sep"></div>
+  <div class="tb-tabs">
+    <div class="tb-tab on" onclick="switchTab('plan1')">Option A · Open End-Sep</div>
+    <div class="tb-tab" onclick="switchTab('plan2')">Option B · Zero Closure</div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn" onclick="importJSON()" title="Import JSON">↑ Import JSON</button>
+    <button class="tb-btn" onclick="exportJSON()" title="Export JSON">↓ Export JSON</button>
+    <button class="tb-btn primary" onclick="saveHTML()" title="Save as HTML">💾 Save as HTML</button>
+  </div>
+</div>
+
+<div class="legend-bar">
+  <div class="l-item"><div class="l-sw" style="background:#16A34A"></div>Open / New Store</div>
+  <div class="l-item"><div class="l-sw" style="background:#2563EB"></div>CYHT Construction</div>
+  <div class="l-item"><div class="l-sw" style="background:#EF4444"></div>Demo / Closure</div>
+  <div class="l-item"><div class="l-sw" style="background:#94A3B8"></div>Background Ref.</div>
+  <div class="l-item"><div class="l-tbc"></div>TBC – Pending</div>
+  <div class="l-item"><div class="l-dia"></div>Milestone</div>
+  <div class="l-item"><div class="l-wknd"></div>Weekend</div>
+  <div class="l-right">✏ Click any text to edit · Hover row to delete · + Add task / milestone</div>
+</div>
+
+<div class="info-box" id="infoBox">
+    <div class="info-desc" id="infoDesc" contenteditable="true" spellcheck="false">Working backwards from a <strong>CYHT end-September opening</strong>, SXL's existing store closes immediately after Labour Day (mid-May), creating a <strong>~2-month vacancy gap</strong> (mid-May to mid-July), but secures the <strong>National Day Golden Week</strong> trading period.</div>
+    <div class="info-kpis">
+      <div class="kpi" onclick="openKpiModal(0)">
+        <div class="kpi-v" style="color:#2563EB">Sep 30</div>
+        <div class="kpi-l">川粤海棠 Target Open</div>
+      </div>
+      <div class="kpi" onclick="openKpiModal(1)">
+        <div class="kpi-v" style="color:#DC2626">~2 mo</div>
+        <div class="kpi-l">苏小柳 Vacancy Gap</div>
+      </div>
+      <div class="kpi" onclick="openKpiModal(2)">
+        <div class="kpi-v" style="color:#16A34A">Captured</div>
+        <div class="kpi-l">Golden Week</div>
+      </div></div></div>
+
+<div class="chart-wrap">
+  <div class="chart-scroll" id="chartScroll">
+    <div class="chart-inner">
+      <div class="left-panel" id="leftPanel"><div class="lp-hdr">
+    <div class="lp-hcell num">#</div>
+    <div class="lp-hcell name">Task / Milestone</div>
+    <div class="lp-hcell range">Date Range</div>
+  </div><div class="lp-row ph-row clickable" onclick="openPhaseModal('ph0')">
+        <div class="lp-cell num"></div>
+        <div class="lp-cell name" style="border-right:1px solid var(--border)">
+          <span class="ph-label">Background · SXL New Store (former Wang Fei Jia unit)</span>
+        </div>
+        <div class="lp-cell range"></div>
+      </div><div class="lp-row clickable" data-id="b1" onclick="openModal('b1')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'b1')">⠿</div>
+        <div class="lp-cell num">B.1</div>
+        <div class="lp-cell name">
+          <div class="n-dot" style="background:#94A3B8;"></div>
+          <span>王妃家 Unit Demolition</span>
+          
+        </div>
+        <div class="lp-cell range">3/1 → 3/31</div>
+        <button class="del-btn" onclick="confirmDelete(event,'b1')">×</button>
+      </div><div class="lp-row clickable" data-id="b2" onclick="openModal('b2')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'b2')">⠿</div>
+        <div class="lp-cell num">B.2</div>
+        <div class="lp-cell name">
+          <div class="n-dot" style="background:#94A3B8;opacity:.6"></div>
+          <span>苏小柳 New Store Fit-out</span>
+          <span class="tbc-badge">TBC</span>
+        </div>
+        <div class="lp-cell range">4/30 → 7/9</div>
+        <button class="del-btn" onclick="confirmDelete(event,'b2')">×</button>
+      </div><div class="lp-row clickable" data-id="bm" onclick="openModal('bm')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'bm')">⠿</div>
+        <div class="lp-cell num">B.M</div>
+        <div class="lp-cell name">
+          <div class="n-dot ms" style="background:#16A34A"></div>
+          <span style="font-size:11.5px;color:var(--dim);font-style:italic">苏小柳 New Store Opening</span>
+          
+        </div>
+        <div class="lp-cell range">◆ 7/12</div>
+        <button class="del-btn" onclick="confirmDelete(event,'bm')">×</button>
+      </div><div class="lp-row ph-row clickable" onclick="openPhaseModal('ph1')">
+        <div class="lp-cell num"></div>
+        <div class="lp-cell name" style="border-right:1px solid var(--border)">
+          <span class="ph-label">Option A · SXL Old Store + Vans Zone</span>
+        </div>
+        <div class="lp-cell range"></div>
+      </div><div class="lp-row clickable" data-id="t2" onclick="openModal('t2')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'t2')">⠿</div>
+        <div class="lp-cell num">1.1</div>
+        <div class="lp-cell name">
+          <div class="n-dot ms" style="background:#EA580C"></div>
+          <span style="font-size:11.5px;color:var(--dim);font-style:italic">苏小柳 &amp; Vans Lease End / Store Closure</span>
+          
+        </div>
+        <div class="lp-cell range">◆ 5/7</div>
+        <button class="del-btn" onclick="confirmDelete(event,'t2')">×</button>
+      </div><div class="lp-row clickable" data-id="t3" onclick="openModal('t3')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'t3')">⠿</div>
+        <div class="lp-cell num">1.2</div>
+        <div class="lp-cell name">
+          <div class="n-dot" style="background:#EF4444;"></div>
+          <span>苏小柳 &amp; Vans Simultaneous Demolition</span>
+          
+        </div>
+        <div class="lp-cell range">5/7 → 5/31</div>
+        <button class="del-btn" onclick="confirmDelete(event,'t3')">×</button>
+      </div><div class="lp-row clickable" data-id="t4" onclick="openModal('t4')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'t4')">⠿</div>
+        <div class="lp-cell num">1.3</div>
+        <div class="lp-cell name">
+          <div class="n-dot" style="background:#3B82F6;opacity:.6"></div>
+          <span>Unit Reconfiguration (merge two units)</span>
+          <span class="tbc-badge">TBC</span>
+        </div>
+        <div class="lp-cell range">6/1 → 6/28</div>
+        <button class="del-btn" onclick="confirmDelete(event,'t4')">×</button>
+      </div><div class="lp-row clickable" data-id="t5" onclick="openModal('t5')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'t5')">⠿</div>
+        <div class="lp-cell num">1.M</div>
+        <div class="lp-cell name">
+          <div class="n-dot ms" style="background:#2563EB"></div>
+          <span style="font-size:11.5px;color:var(--dim);font-style:italic">川粤海棠 Move-in</span>
+          
+        </div>
+        <div class="lp-cell range">◆ 6/30</div>
+        <button class="del-btn" onclick="confirmDelete(event,'t5')">×</button>
+      </div><div class="lp-row clickable" data-id="t6" onclick="openModal('t6')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'t6')">⠿</div>
+        <div class="lp-cell num">1.4</div>
+        <div class="lp-cell name">
+          <div class="n-dot" style="background:#2563EB;"></div>
+          <span>川粤海棠 Construction &amp; Fit-out</span>
+          
+        </div>
+        <div class="lp-cell range">7/1 → 9/28</div>
+        <button class="del-btn" onclick="confirmDelete(event,'t6')">×</button>
+      </div><div class="lp-row clickable" data-id="t7" onclick="openModal('t7')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'t7')">⠿</div>
+        <div class="lp-cell num">1.M</div>
+        <div class="lp-cell name">
+          <div class="n-dot ms" style="background:#16A34A"></div>
+          <span style="font-size:11.5px;color:var(--dim);font-style:italic">川粤海棠 Grand Opening</span>
+          
+        </div>
+        <div class="lp-cell range">◆ 9/30</div>
+        <button class="del-btn" onclick="confirmDelete(event,'t7')">×</button>
+      </div><button class="add-row-btn" onclick="openAddModal()">＋ Add Task / Milestone</button></div>
+      <div class="tl-panel" id="tlPanel"><div class="tl-mhdr" style="width:3640px"><div class="m-cell" style="width:403px">Mar 2026</div><div class="m-cell" style="width:390px">Apr 2026</div><div class="m-cell" style="width:403px">May 2026</div><div class="m-cell" style="width:390px">Jun 2026</div><div class="m-cell" style="width:403px">Jul 2026</div><div class="m-cell" style="width:403px">Aug 2026</div><div class="m-cell" style="width:390px">Sep 2026</div><div class="m-cell" style="width:403px">Oct 2026</div><div class="m-cell" style="width:390px">Nov 2026</div><div class="m-cell" style="width:65px">Dec 2026</div></div>
+    <div class="tl-dhdr" style="width:3640px"><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">1</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">3</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">4</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">5</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">6</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">7</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">8</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">9</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">10</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">11</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">12</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">13</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">14</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">15</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">16</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">17</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">18</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">19</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">20</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">21</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">22</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">23</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">24</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">25</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">26</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">27</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">28</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">29</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">30</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">31</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">1</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">3</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">4</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">5</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">6</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">7</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">8</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">9</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">10</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">11</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">12</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">13</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">14</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">15</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">16</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">17</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">18</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">19</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">20</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">21</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">22</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">23</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">24</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">25</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">26</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">27</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">28</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">29</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">30</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">1</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">2</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">3</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">4</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">5</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">6</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">7</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">8</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">9</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">10</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">11</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">12</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">13</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">14</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">15</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">16</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">17</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">18</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">19</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">20</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">21</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">22</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">23</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">24</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">25</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">26</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">27</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">28</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">29</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">30</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">31</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">1</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">3</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">4</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">5</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">6</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">7</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">8</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">9</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">10</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">11</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">12</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">13</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">14</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">15</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">16</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">17</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">18</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">19</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">20</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">21</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">22</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">23</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">24</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">25</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">26</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">27</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">28</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">29</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">30</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">1</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">3</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">4</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">5</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">6</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">7</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">8</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">9</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">10</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">11</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">12</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">13</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">14</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">15</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">16</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">17</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">18</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">19</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">20</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">21</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">22</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">23</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">24</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">25</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">26</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">27</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">28</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">29</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">30</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">31</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">1</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">2</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">3</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">4</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">5</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">6</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">7</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">8</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">9</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">10</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">11</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">12</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">13</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">14</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">15</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">16</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">17</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">18</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">19</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">20</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">21</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">22</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">23</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">24</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">25</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">26</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">27</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">28</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">29</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">30</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">31</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">1</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">3</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">4</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">5</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">6</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">7</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">8</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">9</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">10</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">11</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">12</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">13</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">14</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">15</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">16</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">17</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">18</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">19</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">20</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">21</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">22</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">23</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">24</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">25</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">26</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">27</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">28</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">29</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">30</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">1</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">2</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">3</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">4</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">5</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">6</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">7</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">8</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">9</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">10</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">11</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">12</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">13</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">14</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">15</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">16</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">17</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">18</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">19</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">20</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">21</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">22</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">23</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">24</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">25</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">26</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">27</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">28</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">29</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">30</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">31</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">1</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">3</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">4</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">5</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">6</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">7</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">8</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">9</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">10</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">11</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">12</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">13</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">14</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">15</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">16</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">17</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">18</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">19</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">20</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">21</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">22</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">23</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">24</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">25</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">26</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">27</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">28</span></div><div class="d-cell wknd"><span class="dn">Su</span><span class="dd">29</span></div><div class="d-cell wk-start"><span class="dn">Mo</span><span class="dd">30</span></div><div class="d-cell"><span class="dn">Tu</span><span class="dd">1</span></div><div class="d-cell"><span class="dn">We</span><span class="dd">2</span></div><div class="d-cell"><span class="dn">Th</span><span class="dd">3</span></div><div class="d-cell"><span class="dn">Fr</span><span class="dd">4</span></div><div class="d-cell wknd"><span class="dn">Sa</span><span class="dd">5</span></div></div>
+    <div style="position:relative;width:3640px"><div class="a-band" style="left:793px;width:65px">
+      <div class="a-band-fill" style="background:rgba(234,88,12,.06)"></div>
+      <div class="a-band-lbl" style="color:#EA580C">Labour Day</div>
+    </div><div class="a-band" style="left:871px;width:858px">
+      <div class="a-band-fill" style="background:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(239,68,68,.05) 4px,rgba(239,68,68,.05) 8px)"></div>
+      <div class="a-band-lbl" style="color:#DC2626">⚠ SXL Vacancy (~2 months)</div>
+    </div><div class="a-band" style="left:2782px;width:91px">
+      <div class="a-band-fill" style="background:rgba(22,163,74,.06)"></div>
+      <div class="a-band-lbl" style="color:#16A34A">National Day (open)</div>
+    </div><div class="today-line" style="left:78px"><div class="today-lbl">TODAY</div></div><div class="g-row ph-row" style="height:var(--ph-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="bar" id="bar_b1" style="left:0px;width:403px;background:#94A3B8" data-id="b1" onmousedown="barMD(event,'b1')" onmouseenter="showTip(event,'b1')" onmouseleave="hideTip()">
+        王妃家 Unit Demolition
+        <div class="bar-rz" onmousedown="rzMD(event,'b1')"></div>
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="bar tbc" id="bar_b2" style="left:780px;width:923px;background:#94A3B8" data-id="b2" onmousedown="barMD(event,'b2')" onmouseenter="showTip(event,'b2')" onmouseleave="hideTip()">
+        苏小柳 New Store Fit-out
+        <div class="bar-rz" onmousedown="rzMD(event,'b2')"></div>
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="ms-dia" id="ms_bm" style="left:1729px;background:#16A34A;cursor:grab" data-id="bm" onmousedown="msMD(event,'bm')" onmouseenter="showTip(event,'bm')" onmouseleave="hideTip()">
+      </div></div><div class="g-row ph-row" style="height:var(--ph-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="ms-dia" id="ms_t2" style="left:871px;background:#EA580C;cursor:grab" data-id="t2" onmousedown="msMD(event,'t2')" onmouseenter="showTip(event,'t2')" onmouseleave="hideTip()">
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="bar" id="bar_t3" style="left:871px;width:325px;background:#EF4444" data-id="t3" onmousedown="barMD(event,'t3')" onmouseenter="showTip(event,'t3')" onmouseleave="hideTip()">
+        苏小柳 &amp; Vans Simultaneous Demolition
+        <div class="bar-rz" onmousedown="rzMD(event,'t3')"></div>
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="bar tbc" id="bar_t4" style="left:1196px;width:364px;background:#3B82F6" data-id="t4" onmousedown="barMD(event,'t4')" onmouseenter="showTip(event,'t4')" onmouseleave="hideTip()">
+        Unit Reconfiguration (merge two units)
+        <div class="bar-rz" onmousedown="rzMD(event,'t4')"></div>
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="ms-dia" id="ms_t5" style="left:1573px;background:#2563EB;cursor:grab" data-id="t5" onmousedown="msMD(event,'t5')" onmouseenter="showTip(event,'t5')" onmouseleave="hideTip()">
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="bar" id="bar_t6" style="left:1586px;width:1170px;background:#2563EB" data-id="t6" onmousedown="barMD(event,'t6')" onmouseenter="showTip(event,'t6')" onmouseleave="hideTip()">
+        川粤海棠 Construction &amp; Fit-out
+        <div class="bar-rz" onmousedown="rzMD(event,'t6')"></div>
+      </div></div><div class="g-row" style="height:var(--row-h)"><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="g-day wknd"></div><div class="g-day wk-start"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day wknd"></div><div class="ms-dia" id="ms_t7" style="left:2769px;background:#16A34A;cursor:grab" data-id="t7" onmousedown="msMD(event,'t7')" onmouseenter="showTip(event,'t7')" onmouseleave="hideTip()">
+      </div></div><div class="g-row add-row" style="height:32px"><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div><div class="g-day"></div></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- hidden file input for import -->
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Edit KPI Label</h3>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div id="taskFields" style="display: none;">
+      <div class="field"><label>Type</label>
+        <select id="mType" onchange="onTypeChange()">
+          <option value="bar">Task Bar</option>
+          <option value="ms">Milestone</option>
+        </select>
+      </div>
+      <div class="field"><label>Name</label><input type="text" id="mName"></div>
+      <div class="field-row" id="mDateRow" style="display: none;">
+        <div class="field"><label>Start Date</label><input type="date" id="mStart"></div>
+        <div class="field"><label>End Date</label><input type="date" id="mEnd"></div>
+      </div>
+      <div class="field" id="mDateSingle" style="display: block;">
+        <label>Date</label><input type="date" id="mDate">
+      </div>
+      <div class="field"><label>Color</label>
+        <div class="color-row" id="colorRow"><div class="color-swatch" style="background:#2563EB" onclick="pickColor('#2563EB')"></div><div class="color-swatch" style="background:#16A34A" onclick="pickColor('#16A34A')"></div><div class="color-swatch" style="background:#EF4444" onclick="pickColor('#EF4444')"></div><div class="color-swatch" style="background:#EA580C" onclick="pickColor('#EA580C')"></div><div class="color-swatch" style="background:#D97706" onclick="pickColor('#D97706')"></div><div class="color-swatch sel" style="background:#7C3AED" onclick="pickColor('#7C3AED')"></div><div class="color-swatch" style="background:#0891B2" onclick="pickColor('#0891B2')"></div><div class="color-swatch" style="background:#94A3B8" onclick="pickColor('#94A3B8')"></div><div class="color-swatch" style="background:#374151" onclick="pickColor('#374151')"></div><div class="color-swatch" style="background:#DB2777" onclick="pickColor('#DB2777')"></div></div>
+      </div>
+      <div class="field"><label>Status</label>
+        <select id="mStatus">
+          <option value="confirmed">✅ Confirmed</option>
+          <option value="tbc">⚠️ TBC – Pending</option>
+        </select>
+      </div>
+      <div class="field"><label>Notes</label>
+        <textarea id="mNote" rows="2" placeholder="Dependencies, remarks…"></textarea>
+      </div>
+    </div>
+    <div id="kpiFields" style="">
+      <div class="field"><label>KPI Label Text</label><input type="text" id="kpiLabel"></div>
+    </div>
+    <div id="phaseFields" style="display:none">
+      <div class="field"><label>Phase Title</label><input type="text" id="phaseLabel"></div>
+    </div>
+    <div class="modal-btns" id="modalBtns">
+      <button class="btn btn-danger" id="btnDel" onclick="deleteRow()" style="display: none;">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast show" id="toast">Saved</div>
+<div class="tip" id="tip" style="left: 1154px; top: 285px; display: none;">苏小柳 New Store Fit-out
+Apr 30 → Jul 9（71天）
+Move-in end of April, ~10 weeks construction (TBC)
+⚠️ Duration / date pending (TBC)</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const S = new Date(2026,2,1);
+const E = new Date(2026,11,5);
+const DAY_W = 13;
+const MZ=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DZ=['Su','Mo','Tu','We','Th','Fr','Sa'];
+const COLORS=['#2563EB','#16A34A','#EF4444','#EA580C','#D97706','#7C3AED','#0891B2','#94A3B8','#374151','#DB2777'];
+
+function dayOff(s){const d=typeof s==='string'?new Date(s):s;return Math.round((d-S)/86400000)}
+function offToDate(n){const d=new Date(S);d.setDate(d.getDate()+n);return d}
+function fmtS(s){const d=typeof s==='string'?new Date(s):s;return`${d.getMonth()+1}/${d.getDate()}`}
+function fmtF(s){const d=typeof s==='string'?new Date(s):s;return`${MZ[d.getMonth()]} ${d.getDate()}`}
+function toInp(s){const d=typeof s==='string'?new Date(s):s;return d.toISOString().split('T')[0]}
+function totDays(){return dayOff(E)+1}
+function isWknd(d){const w=d.getDay();return w===0||w===6}
+function uid(){return Math.random().toString(36).slice(2,8)}
+function monthDiff(a,b){
+  const days=Math.round(Math.abs(new Date(b)-new Date(a))/86400000);
+  const m=days/30.44;
+  return m<1?`${days}d`:(m<2?`~1 mo`:`~${Math.round(m)} mo`);
+}
+
+// ── DATA ──────────────────────────────────────────────
+let plans={
+  "plan1": {
+    "meta": "Option A · CYHT Open End-Sep · 2026/03 → 2026/10",
+    "desc": "Working backwards from a <strong>CYHT end-September opening</strong>, SXL's existing store closes immediately after Labour Day (mid-May), creating a <strong>~2-month vacancy gap</strong> (mid-May to mid-July), but secures the <strong>National Day Golden Week</strong> trading period.",
+    "kpiLabels": [
+      "川粤海棠 Target Open",
+      "苏小柳 Vacancy Gap",
+      "Golden Week"
+    ],
+    "bands": [
+      {
+        "s": "2026-05-01",
+        "e": "2026-05-06",
+        "fill": "rgba(234,88,12,.06)",
+        "lbl": "Labour Day",
+        "lc": "#EA580C"
+      },
+      {
+        "s": "2026-05-07",
+        "e": "2026-07-12",
+        "fill": "rgba(239,68,68,.05)",
+        "stripe": true,
+        "lbl": "⚠ SXL Vacancy (~2 months)",
+        "lc": "#DC2626"
+      },
+      {
+        "s": "2026-10-01",
+        "e": "2026-10-08",
+        "fill": "rgba(22,163,74,.06)",
+        "lbl": "National Day (open)",
+        "lc": "#16A34A"
+      }
+    ],
+    "rows": [
+      {
+        "type": "phase",
+        "phId": "ph0",
+        "label": "Background · SXL New Store (former Wang Fei Jia unit)"
+      },
+      {
+        "id": "b1",
+        "num": "B.1",
+        "type": "bar",
+        "label": "王妃家 Unit Demolition",
+        "s": "2026-03-01",
+        "e": "2026-03-31",
+        "color": "#94A3B8",
+        "note": "Demolition complete by end of March",
+        "tbc": false
+      },
+      {
+        "id": "b2",
+        "num": "B.2",
+        "type": "bar",
+        "label": "苏小柳 New Store Fit-out",
+        "s": "2026-04-30",
+        "e": "2026-07-09",
+        "color": "#94A3B8",
+        "tbc": true,
+        "note": "Move-in end of April, ~10 weeks construction (TBC)"
+      },
+      {
+        "id": "bm",
+        "num": "B.M",
+        "type": "ms",
+        "label": "苏小柳 New Store Opening",
+        "date": "2026-07-12",
+        "color": "#16A34A",
+        "note": "Target 10–15 Jul 2026",
+        "tbc": false
+      },
+      {
+        "type": "phase",
+        "phId": "ph1",
+        "label": "Option A · SXL Old Store + Vans Zone"
+      },
+      {
+        "id": "t2",
+        "num": "1.1",
+        "type": "ms",
+        "label": "苏小柳 & Vans Lease End / Store Closure",
+        "date": "2026-05-07",
+        "color": "#EA580C",
+        "note": "Close immediately after Labour Day holiday",
+        "tbc": false
+      },
+      {
+        "id": "t3",
+        "num": "1.2",
+        "type": "bar",
+        "label": "苏小柳 & Vans Simultaneous Demolition",
+        "s": "2026-05-07",
+        "e": "2026-05-31",
+        "color": "#EF4444",
+        "note": "Both units demo in parallel, cleared by end May",
+        "tbc": false
+      },
+      {
+        "id": "t4",
+        "num": "1.3",
+        "type": "bar",
+        "label": "Unit Reconfiguration (merge two units)",
+        "s": "2026-06-01",
+        "e": "2026-06-28",
+        "color": "#3B82F6",
+        "tbc": true,
+        "note": "~4 weeks, duration TBC"
+      },
+      {
+        "id": "t5",
+        "num": "1.M",
+        "type": "ms",
+        "label": "川粤海棠 Move-in",
+        "date": "2026-06-30",
+        "color": "#2563EB",
+        "note": "3-month construction buffer, move-in end June",
+        "tbc": false
+      },
+      {
+        "id": "t6",
+        "num": "1.4",
+        "type": "bar",
+        "label": "川粤海棠 Construction & Fit-out",
+        "s": "2026-07-01",
+        "e": "2026-09-28",
+        "color": "#2563EB",
+        "note": "~3 months, incl. snagging & commissioning",
+        "tbc": false
+      },
+      {
+        "id": "t7",
+        "num": "1.M",
+        "type": "ms",
+        "label": "川粤海棠 Grand Opening",
+        "date": "2026-09-30",
+        "color": "#16A34A",
+        "note": "Opens before National Day, captures Golden Week",
+        "tbc": false
+      }
+    ]
+  },
+  "plan2": {
+    "meta": "Option B · SXL Zero Closure (Seamless Handover) · 2026/03 → 2026/11",
+    "desc": "SXL old store trades until the <strong>new store opens in July</strong> — zero revenue loss. The trade-off is a significantly delayed CYHT handover, <strong>missing the National Day Golden Week</strong> (still under construction in Oct), with an expected opening in <strong>late November</strong>.",
+    "kpiLabels": [
+      "川粤海棠 Expected Open",
+      "苏小柳 Revenue Loss",
+      "Golden Week"
+    ],
+    "bands": [
+      {
+        "s": "2026-05-01",
+        "e": "2026-05-06",
+        "fill": "rgba(234,88,12,.06)",
+        "lbl": "Labour Day",
+        "lc": "#EA580C"
+      },
+      {
+        "s": "2026-10-01",
+        "e": "2026-10-08",
+        "fill": "rgba(239,68,68,.06)",
+        "stripe": true,
+        "lbl": "⚠ National Day (CYHT under construction)",
+        "lc": "#DC2626"
+      }
+    ],
+    "rows": [
+      {
+        "type": "phase",
+        "phId": "ph0",
+        "label": "Background · SXL New Store (former Wang Fei Jia unit)"
+      },
+      {
+        "id": "b1",
+        "num": "B.1",
+        "type": "bar",
+        "label": "New Unit Demolition",
+        "s": "2026-03-01",
+        "e": "2026-03-31",
+        "color": "#94A3B8",
+        "note": "Demolition complete by end of March"
+      },
+      {
+        "id": "b2",
+        "num": "B.2",
+        "type": "bar",
+        "label": "苏小柳 New Store Fit-out",
+        "s": "2026-04-30",
+        "e": "2026-07-09",
+        "color": "#94A3B8",
+        "tbc": true,
+        "note": "Move-in end of April, ~10 weeks construction (TBC)"
+      },
+      {
+        "id": "bm",
+        "num": "B.M",
+        "type": "ms",
+        "label": "苏小柳 New Store Opening",
+        "date": "2026-07-12",
+        "color": "#16A34A",
+        "note": "Target 10–15 Jul 2026",
+        "tbc": false
+      },
+      {
+        "type": "phase",
+        "phId": "ph1",
+        "label": "Option B · SXL Old Store Zone"
+      },
+      {
+        "id": "t1",
+        "num": "2.1",
+        "type": "bar",
+        "label": "苏小柳 Old Store Continues Trading",
+        "s": "2026-03-01",
+        "e": "2026-07-09",
+        "color": "#16A34A",
+        "note": "No closure — continuous revenue throughout",
+        "tbc": false
+      },
+      {
+        "id": "t2",
+        "num": "2.M",
+        "type": "ms",
+        "label": "苏小柳 Old Store Closure (synced with new opening)",
+        "date": "2026-07-10",
+        "color": "#EA580C",
+        "note": "New store opens Jul, old store closes same day",
+        "tbc": false
+      },
+      {
+        "id": "t3",
+        "num": "2.2",
+        "type": "bar",
+        "label": "Demolition + Unit Reconfiguration",
+        "s": "2026-07-14",
+        "e": "2026-08-23",
+        "color": "#EF4444",
+        "tbc": true,
+        "note": "Demo + merge, est. 5–6 weeks (TBC)"
+      },
+      {
+        "id": "t4",
+        "num": "2.M",
+        "type": "ms",
+        "label": "川粤海棠 Move-in",
+        "date": "2026-08-25",
+        "color": "#2563EB",
+        "note": "Earliest move-in mid-to-late August",
+        "tbc": false
+      },
+      {
+        "id": "t5",
+        "num": "2.3",
+        "type": "bar",
+        "label": "川粤海棠 Construction & Fit-out",
+        "s": "2026-08-25",
+        "e": "2026-11-24",
+        "color": "#2563EB",
+        "note": "~3 months, incl. snagging & commissioning",
+        "tbc": false
+      },
+      {
+        "id": "t6",
+        "num": "2.M",
+        "type": "ms",
+        "label": "川粤海棠 Grand Opening",
+        "date": "2026-11-27",
+        "color": "#7C3AED",
+        "note": "Late November — misses National Day window",
+        "tbc": false
+      }
+    ]
+  }
+}; // ──END-PLANS──
+
+// ── KPI COMPUTE ─────────────────────────────────────────
+function computeKpis(plan){
+  const rows=plan.rows;
+  if(plan===plans.plan1){
+    const open=rows.find(r=>r.id==='t7');
+    const close=rows.find(r=>r.id==='t2');
+    const newOpen=rows.find(r=>r.id==='bm');
+    const openVal=open?fmtF(open.date):'—';
+    const gapVal=(close&&newOpen)?monthDiff(close.date,newOpen.date):'—';
+    const oct1=new Date(2026,9,1);
+    const covered=open&&new Date(open.date)<oct1;
+    return [
+      {v:openVal,  l:plan.kpiLabels[0],c:'#2563EB'},
+      {v:gapVal,   l:plan.kpiLabels[1],c:'#DC2626'},
+      {v:covered?'Captured':'Missed',l:plan.kpiLabels[2],c:covered?'#16A34A':'#DC2626'},
+    ];
+  } else {
+    const open=rows.find(r=>r.id==='t6');
+    const construct=rows.find(r=>r.id==='t5');
+    const oct1=new Date(2026,9,1);
+    const missed=construct&&new Date(construct.e)>oct1;
+    return [
+      {v:open?fmtF(open.date):'—',l:plan.kpiLabels[0],c:'#7C3AED'},
+      {v:'Zero closure',l:plan.kpiLabels[1],c:'#16A34A'},
+      {v:missed?'Missed':'Captured',l:plan.kpiLabels[2],c:missed?'#DC2626':'#16A34A'},
+    ];
+  }
+}
+
+let cur='plan1',editId=null,editMode=null,editKpiIdx=null,editPhId=null,selColor=null;
+
+// ── RENDER ──────────────────────────────────────────────
+function render(){
+  const p=plans[cur];
+  document.getElementById('tbMeta').textContent=p.meta;
+  const kpis=computeKpis(p);
+  document.getElementById('infoBox').innerHTML=`
+    <div class="info-desc" id="infoDesc" contenteditable="true" spellcheck="false">${p.desc}</div>
+    <div class="info-kpis">${kpis.map((k,i)=>`
+      <div class="kpi" onclick="openKpiModal(${i})">
+        <div class="kpi-v" style="color:${k.c}">${k.v}</div>
+        <div class="kpi-l">${k.l}</div>
+      </div>`).join('')}</div>`;
+  setTimeout(()=>{
+    const el=document.getElementById('infoDesc');
+    if(el) el.addEventListener('blur',()=>{plans[cur].desc=el.innerHTML});
+  },0);
+  renderLeft(p);
+  renderTL(p);
+}
+
+function renderNoScroll(){
+  const cs=document.getElementById('chartScroll');
+  const sl=cs.scrollLeft;
+  render();
+  cs.scrollLeft=sl;
+}
+
+function renderLeft(p){
+  const lp=document.getElementById('leftPanel');
+  let h=`<div class="lp-hdr">
+    <div class="lp-hcell num">#</div>
+    <div class="lp-hcell name">Task / Milestone</div>
+    <div class="lp-hcell range">Date Range</div>
+  </div>`;
+
+  for(const row of p.rows){
+    if(row.type==='phase'){
+      h+=`<div class="lp-row ph-row clickable" onclick="openPhaseModal('${row.phId}')">
+        <div class="lp-cell num"></div>
+        <div class="lp-cell name" style="border-right:1px solid var(--border)">
+          <span class="ph-label">${row.label}</span>
+        </div>
+        <div class="lp-cell range"></div>
+      </div>`;
+    } else if(row.type==='ms'){
+      h+=`<div class="lp-row clickable" data-id="${row.id}" onclick="openModal('${row.id}')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'${row.id}')">⠿</div>
+        <div class="lp-cell num">${row.num}</div>
+        <div class="lp-cell name">
+          <div class="n-dot ms" style="background:${row.color}"></div>
+          <span style="font-size:11.5px;color:var(--dim);font-style:italic">${row.label}</span>
+          ${row.tbc?'<span class="tbc-badge">TBC</span>':''}
+        </div>
+        <div class="lp-cell range">◆ ${fmtS(row.date)}</div>
+        <button class="del-btn" onclick="confirmDelete(event,'${row.id}')">×</button>
+      </div>`;
+    } else {
+      h+=`<div class="lp-row clickable" data-id="${row.id}" onclick="openModal('${row.id}')">
+        <div class="drag-handle" onmousedown="rowDragMD(event,'${row.id}')">⠿</div>
+        <div class="lp-cell num">${row.num}</div>
+        <div class="lp-cell name">
+          <div class="n-dot" style="background:${row.color};${row.tbc?'opacity:.6':''}"></div>
+          <span>${row.label}</span>
+          ${row.tbc?'<span class="tbc-badge">TBC</span>':''}
+        </div>
+        <div class="lp-cell range">${fmtS(row.s)} → ${fmtS(row.e)}</div>
+        <button class="del-btn" onclick="confirmDelete(event,'${row.id}')">×</button>
+      </div>`;
+    }
+  }
+
+  // add row button
+  h+=`<button class="add-row-btn" onclick="openAddModal()">＋ Add Task / Milestone</button>`;
+  lp.innerHTML=h;
+}
+
+function renderTL(p){
+  const tl=document.getElementById('tlPanel');
+  const total=totDays(),tw=total*DAY_W;
+  const days=[];
+  for(let i=0;i<total;i++){const d=offToDate(i);days.push({off:i,d,wknd:isWknd(d),wkS:d.getDay()===1});}
+
+  let mh='',ck=null,cc=0;
+  for(const day of days){
+    const k=`${day.d.getFullYear()}-${day.d.getMonth()}`;
+    if(k!==ck){if(ck!==null)mh+=`<div class="m-cell" style="width:${cc*DAY_W}px">${MZ[+ck.split('-')[1]]} ${ck.split('-')[0]}</div>`;ck=k;cc=0;}cc++;
+  }
+  if(ck)mh+=`<div class="m-cell" style="width:${cc*DAY_W}px">${MZ[+ck.split('-')[1]]} ${ck.split('-')[0]}</div>`;
+
+  let dh='';
+  for(const day of days){
+    let c='d-cell';if(day.wknd)c+=' wknd';if(day.wkS)c+=' wk-start';
+    dh+=`<div class="${c}"><span class="dn">${DZ[day.d.getDay()]}</span><span class="dd">${day.d.getDate()}</span></div>`;
+  }
+
+  let bnd='';
+  for(const b of p.bands){
+    const bx=dayOff(b.s)*DAY_W,bw=(dayOff(b.e)-dayOff(b.s))*DAY_W;
+    const bg=b.stripe?`repeating-linear-gradient(-45deg,transparent,transparent 4px,${b.fill} 4px,${b.fill} 8px)`:b.fill;
+    bnd+=`<div class="a-band" style="left:${bx}px;width:${bw}px">
+      <div class="a-band-fill" style="background:${bg}"></div>
+      <div class="a-band-lbl" style="color:${b.lc}">${b.lbl}</div>
+    </div>`;
+  }
+
+  const tod=dayOff(new Date());
+  const todH=tod>=0&&tod<total?`<div class="today-line" style="left:${tod*DAY_W}px"><div class="today-lbl">TODAY</div></div>`:'';
+
+  let gh='';
+  for(const row of p.rows){
+    const isPh=row.type==='phase';
+    let inner='';
+    for(const day of days){
+      let c='g-day';if(day.wknd)c+=' wknd';if(day.wkS)c+=' wk-start';
+      inner+=`<div class="${c}"></div>`;
+    }
+    if(row.type==='bar'){
+      const bx=dayOff(row.s)*DAY_W,bw=Math.max(DAY_W,(dayOff(row.e)-dayOff(row.s)+1)*DAY_W);
+      inner+=`<div class="bar${row.tbc?' tbc':''}" id="bar_${row.id}"
+        style="left:${bx}px;width:${bw}px;background:${row.color}"
+        data-id="${row.id}"
+        onmousedown="barMD(event,'${row.id}')"
+        onmouseenter="showTip(event,'${row.id}')"
+        onmouseleave="hideTip()">
+        ${row.label}
+        <div class="bar-rz" onmousedown="rzMD(event,'${row.id}')"></div>
+      </div>`;
+    }
+    if(row.type==='ms'){
+      const mx=dayOff(row.date)*DAY_W;
+      inner+=`<div class="ms-dia" id="ms_${row.id}"
+        style="left:${mx}px;background:${row.color};cursor:grab"
+        data-id="${row.id}"
+        onmousedown="msMD(event,'${row.id}')"
+        onmouseenter="showTip(event,'${row.id}')"
+        onmouseleave="hideTip()">
+      </div>`;
+    }
+    gh+=`<div class="${isPh?'g-row ph-row':'g-row'}" style="height:${isPh?'var(--ph-h)':'var(--row-h)'}">${inner}</div>`;
+  }
+  // spacer row for add button
+  gh+=`<div class="g-row add-row" style="height:32px">${Array(days.length).fill('<div class="g-day"></div>').join('')}</div>`;
+
+  tl.innerHTML=`<div class="tl-mhdr" style="width:${tw}px">${mh}</div>
+    <div class="tl-dhdr" style="width:${tw}px">${dh}</div>
+    <div style="position:relative;width:${tw}px">${bnd}${todH}${gh}</div>`;
+}
+
+// ── DRAG ────────────────────────────────────────────────
+let drag=null;
+function getRow(id){return plans[cur].rows.find(r=>r.id===id)}
+
+function barMD(e,id){
+  if(e.target.classList.contains('bar-rz'))return;
+  e.preventDefault();
+  const r=getRow(id);if(!r)return;
+  drag={id,type:'bar',mode:'move',sx:e.clientX,sOff:dayOff(r.s),eOff:dayOff(r.e)};
+}
+function rzMD(e,id){
+  e.stopPropagation();e.preventDefault();
+  const r=getRow(id);if(!r)return;
+  drag={id,type:'bar',mode:'resize',sx:e.clientX,sOff:dayOff(r.s),eOff:dayOff(r.e)};
+}
+function msMD(e,id){
+  e.preventDefault();
+  const r=getRow(id);if(!r)return;
+  drag={id,type:'ms',mode:'move',sx:e.clientX,dOff:dayOff(r.date)};
+}
+document.addEventListener('mousemove',e=>{
+  if(!drag)return;
+  const delta=Math.round((e.clientX-drag.sx)/DAY_W),tot=totDays();
+  if(drag.type==='ms'){
+    const el=document.getElementById('ms_'+drag.id);if(!el)return;
+    el.style.left=Math.max(0,Math.min(tot-1,drag.dOff+delta))*DAY_W+'px';
+    el.style.cursor='grabbing';
+  } else {
+    const el=document.getElementById('bar_'+drag.id);if(!el)return;
+    if(drag.mode==='move'){
+      el.style.left=Math.max(0,Math.min(tot-1,drag.sOff+delta))*DAY_W+'px';
+    } else {
+      el.style.width=Math.max(DAY_W,(Math.max(drag.sOff+1,Math.min(tot-1,drag.eOff+delta))-drag.sOff+1)*DAY_W)+'px';
+    }
+    el.style.cursor='grabbing';
+  }
+});
+document.addEventListener('mouseup',e=>{
+  if(!drag)return;
+  const delta=Math.round((e.clientX-drag.sx)/DAY_W),tot=totDays();
+  const row=getRow(drag.id);
+  if(drag.type==='ms'){
+    if(row&&Math.abs(delta)>=1){
+      row.date=toInp(offToDate(Math.max(0,Math.min(tot-1,drag.dOff+delta))));
+      renderNoScroll();
+    } else if(row&&Math.abs(delta)<1){
+      openModal(drag.id);
+    }
+  } else {
+    if(row&&Math.abs(delta)>=1){
+      if(drag.mode==='move'){
+        const ns=Math.max(0,Math.min(tot-1,drag.sOff+delta));
+        const ne=Math.max(ns,Math.min(tot-1,drag.eOff+delta));
+        row.s=toInp(offToDate(ns));row.e=toInp(offToDate(ne));
+      } else {
+        row.e=toInp(offToDate(Math.max(drag.sOff+1,Math.min(tot-1,drag.eOff+delta))));
+      }
+      renderNoScroll();
+    } else if(row&&Math.abs(delta)<1){
+      openModal(drag.id);
+    }
+  }
+  drag=null;
+});
+
+// ── ADD / DELETE ─────────────────────────────────────────
+function openAddModal(){
+  editId=null; editMode='add'; editKpiIdx=null; editPhId=null;
+  document.getElementById('modalTitle').textContent='Add Task / Milestone';
+  showFields(true,false,false);
+  document.getElementById('mType').value='bar';
+  document.getElementById('mName').value='';
+  document.getElementById('mStart').value='2026-07-01';
+  document.getElementById('mEnd').value='2026-07-14';
+  document.getElementById('mDate').value='2026-07-01';
+  document.getElementById('mStatus').value='confirmed';
+  document.getElementById('mNote').value='';
+  document.getElementById('mDateRow').style.display='flex';
+  document.getElementById('mDateSingle').style.display='none';
+  document.getElementById('btnDel').style.display='none';
+  selColor=COLORS[0];
+  renderColorPicker(selColor);
+  document.getElementById('overlay').classList.add('show');
+}
+
+function confirmDelete(e,id){
+  e.stopPropagation();
+  const row=getRow(id);if(!row)return;
+  if(confirm(`Delete "${row.label}"?`)){
+    plans[cur].rows=plans[cur].rows.filter(r=>r.id!==id);
+    renderNoScroll();
+    toast('Deleted');
+  }
+}
+
+function deleteRow(){
+  if(!editId)return;
+  const row=getRow(editId);if(!row)return;
+  if(confirm(`Delete "${row.label}"?`)){
+    plans[cur].rows=plans[cur].rows.filter(r=>r.id!==editId);
+    closeModal();renderNoScroll();toast('Deleted');
+  }
+}
+
+// ── COLOR PICKER ─────────────────────────────────────────
+function renderColorPicker(sel){
+  document.getElementById('colorRow').innerHTML=COLORS.map(c=>
+    `<div class="color-swatch${c===sel?' sel':''}" style="background:${c}"
+      onclick="pickColor('${c}')"></div>`
+  ).join('');
+}
+function pickColor(c){
+  selColor=c;renderColorPicker(c);
+}
+
+// ── TYPE CHANGE ──────────────────────────────────────────
+function onTypeChange(){
+  const isMs=document.getElementById('mType').value==='ms';
+  document.getElementById('mDateRow').style.display=isMs?'none':'flex';
+  document.getElementById('mDateSingle').style.display=isMs?'block':'none';
+}
+
+// ── MODAL ────────────────────────────────────────────────
+function showFields(task,kpi,phase){
+  document.getElementById('taskFields').style.display=task?'':'none';
+  document.getElementById('kpiFields').style.display=kpi?'':'none';
+  document.getElementById('phaseFields').style.display=phase?'':'none';
+}
+
+function openModal(id){
+  const row=getRow(id);if(!row)return;
+  editId=id;editMode='task';editKpiIdx=null;editPhId=null;
+  const isMs=row.type==='ms';
+  document.getElementById('modalTitle').textContent=isMs?'Edit Milestone':'Edit Task';
+  showFields(true,false,false);
+  document.getElementById('mType').value=row.type;
+  document.getElementById('mName').value=row.label;
+  document.getElementById('mStatus').value=row.tbc?'tbc':'confirmed';
+  document.getElementById('mNote').value=row.note||'';
+  if(isMs){
+    document.getElementById('mDateRow').style.display='none';
+    document.getElementById('mDateSingle').style.display='block';
+    document.getElementById('mDate').value=toInp(new Date(row.date));
+  } else {
+    document.getElementById('mDateRow').style.display='flex';
+    document.getElementById('mDateSingle').style.display='none';
+    document.getElementById('mStart').value=toInp(new Date(row.s));
+    document.getElementById('mEnd').value=toInp(new Date(row.e));
+  }
+  selColor=row.color||COLORS[0];
+  renderColorPicker(selColor);
+  document.getElementById('btnDel').style.display='inline-flex';
+  document.getElementById('overlay').classList.add('show');
+}
+
+function openKpiModal(idx){
+  editMode='kpi';editKpiIdx=idx;editId=null;editPhId=null;
+  document.getElementById('modalTitle').textContent='Edit KPI Label';
+  showFields(false,true,false);
+  document.getElementById('kpiLabel').value=plans[cur].kpiLabels[idx];
+  document.getElementById('btnDel').style.display='none';
+  document.getElementById('overlay').classList.add('show');
+}
+
+function openPhaseModal(phId){
+  const row=plans[cur].rows.find(r=>r.phId===phId);if(!row)return;
+  editMode='phase';editPhId=phId;editId=null;editKpiIdx=null;
+  document.getElementById('modalTitle').textContent='Edit Phase Title';
+  showFields(false,false,true);
+  document.getElementById('phaseLabel').value=row.label;
+  document.getElementById('btnDel').style.display='none';
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('show');
+  editId=null;editMode=null;editKpiIdx=null;editPhId=null;
+}
+
+function saveModal(){
+  if(editMode==='add'){
+    const isMs=document.getElementById('mType').value==='ms';
+    const newRow={
+      id:uid(),
+      num:'—',
+      type:isMs?'ms':'bar',
+      label:document.getElementById('mName').value||'New Task',
+      color:selColor||COLORS[0],
+      tbc:document.getElementById('mStatus').value==='tbc',
+      note:document.getElementById('mNote').value,
+    };
+    if(isMs) newRow.date=document.getElementById('mDate').value;
+    else{ newRow.s=document.getElementById('mStart').value; newRow.e=document.getElementById('mEnd').value; }
+    plans[cur].rows.push(newRow);
+    toast('Added: '+newRow.label);
+  } else if(editMode==='task'&&editId){
+    const row=getRow(editId);if(!row)return;
+    const wasMs=row.type==='ms';
+    const isMs=document.getElementById('mType').value==='ms';
+    row.type=isMs?'ms':'bar';
+    row.label=document.getElementById('mName').value;
+    row.note=document.getElementById('mNote').value;
+    row.tbc=document.getElementById('mStatus').value==='tbc';
+    row.color=selColor||row.color;
+    if(isMs){
+      row.date=document.getElementById('mDate').value;
+      delete row.s; delete row.e;
+    } else {
+      row.s=document.getElementById('mStart').value;
+      row.e=document.getElementById('mEnd').value;
+      delete row.date;
+    }
+    toast('Saved');
+  } else if(editMode==='kpi'&&editKpiIdx!==null){
+    plans[cur].kpiLabels[editKpiIdx]=document.getElementById('kpiLabel').value;
+    toast('Saved');
+  } else if(editMode==='phase'&&editPhId){
+    const row=plans[cur].rows.find(r=>r.phId===editPhId);
+    if(row){row.label=document.getElementById('phaseLabel').value;toast('Saved');}
+  }
+  closeModal();renderNoScroll();
+}
+
+document.getElementById('overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('overlay'))closeModal();
+});
+
+// ── EXPORT / IMPORT JSON ─────────────────────────────────
+function exportJSON(){
+  const data={plans,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`gantt_${cur}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('JSON exported');
+}
+
+function importJSON(){
+  document.getElementById('fileInput').click();
+}
+
+// ── SAVE AS HTML ─────────────────────────────────────────
+function saveHTML(){
+  const rawHTML = document.documentElement.outerHTML;
+  const plansJSON = JSON.stringify(plans, null, 2);
+  const updated = rawHTML.replace(
+    /\/\/ ── DATA ─+\s*let plans=[\s\S]*?\/\/ ──END-PLANS──/,
+    `// ── DATA ──────────────────────────────────────────────\nlet plans=${plansJSON}; // ──END-PLANS──`
+  );
+  const blob = new Blob([updated], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gantt_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+  toast('✅ HTML saved — double-click to open in browser');
+}
+
+function handleImport(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.plans){
+        plans=data.plans;
+        toast('Import successful ✓');
+        renderNoScroll();
+      } else {
+        toast('Invalid JSON — please import a file exported from this tool');
+      }
+    } catch(err){
+      toast('Parse error: '+err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ── ROW DRAG-TO-REORDER ──────────────────────────────────
+let rowDrag=null; // {id, srcIdx, ghost, indicator}
+
+function rowDragMD(e, id){
+  e.stopPropagation(); e.preventDefault();
+  const plan=plans[cur];
+  const srcIdx=plan.rows.findIndex(r=>r.id===id);
+  if(srcIdx<0)return;
+
+  // create ghost label following cursor
+  const ghost=document.createElement('div');
+  ghost.style.cssText=`position:fixed;z-index:999;pointer-events:none;
+    background:#1E3A8A;color:#fff;border-radius:5px;padding:4px 10px;
+    font-size:11px;font-weight:600;font-family:Inter,sans-serif;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap;opacity:.92;`;
+  ghost.textContent=plan.rows[srcIdx].label;
+  document.body.appendChild(ghost);
+
+  // indicator line
+  const ind=document.createElement('div');
+  ind.className='drop-indicator';
+  ind.style.cssText='position:fixed;z-index:998;width:400px;display:none;pointer-events:none;';
+  document.body.appendChild(ind);
+
+  rowDrag={id,srcIdx,ghost,ind,targetIdx:srcIdx};
+  posRowDrag(e);
+
+  // dim the source row
+  const srcEl=document.querySelector(`.lp-row[data-id="${id}"]`);
+  if(srcEl) srcEl.classList.add('dragging');
+}
+
+function posRowDrag(e){
+  if(!rowDrag)return;
+  const {ghost,ind}=rowDrag;
+  ghost.style.left=(e.clientX+12)+'px';
+  ghost.style.top=(e.clientY-10)+'px';
+
+  // find target slot by hit-testing lp-rows
+  const lp=document.getElementById('leftPanel');
+  const rows=[...lp.querySelectorAll('.lp-row[data-id]')];
+  let best=null,bestY=Infinity;
+  rows.forEach(el=>{
+    const rect=el.getBoundingClientRect();
+    const midY=rect.top+rect.height/2;
+    const dist=Math.abs(e.clientY-midY);
+    if(dist<bestY){bestY=dist;best={el,rect,midY};}
+  });
+
+  if(best){
+    const above=e.clientY<best.midY;
+    const id=best.el.dataset.id;
+    const plan=plans[cur];
+    let tIdx=plan.rows.findIndex(r=>r.id===id);
+    if(!above) tIdx++;
+    // don't allow dropping inside a different phase (simplification: allow anywhere among non-phase)
+    rowDrag.targetIdx=tIdx;
+    ind.style.display='block';
+    const lineY=above?best.rect.top:best.rect.bottom;
+    ind.style.top=(lineY-1)+'px';
+    ind.style.left=best.rect.left+'px';
+    ind.style.width=best.rect.width+'px';
+  }
+}
+
+document.addEventListener('mousemove',e=>{
+  if(rowDrag) posRowDrag(e);
+});
+
+document.addEventListener('mouseup',e=>{
+  if(!rowDrag)return;
+  const {id,srcIdx,targetIdx,ghost,ind}=rowDrag;
+
+  // clean up visuals
+  ghost.remove(); ind.remove();
+  const srcEl=document.querySelector(`.lp-row[data-id="${id}"]`);
+  if(srcEl) srcEl.classList.remove('dragging');
+
+  // reorder
+  if(targetIdx!==srcIdx && targetIdx!==srcIdx+1){
+    const plan=plans[cur];
+    const rows=plan.rows;
+    const [moved]=rows.splice(srcIdx,1);
+    // recalc insert index after splice
+    const insertAt=targetIdx>srcIdx?targetIdx-1:targetIdx;
+    rows.splice(insertAt,0,moved);
+    renderNoScroll();
+  }
+  rowDrag=null;
+});
+
+// ── TOOLTIP ─────────────────────────────────────────────
+function showTip(e,id){
+  const row=getRow(id);if(!row)return;
+  const lines=[row.label];
+  if(row.type==='bar') lines.push(`${fmtF(row.s)} → ${fmtF(row.e)}（${dayOff(row.e)-dayOff(row.s)+1}天）`);
+  else lines.push(`日期：${fmtF(row.date)}`);
+  if(row.note) lines.push(row.note);
+  if(row.tbc)  lines.push('⚠️ Duration / date pending (TBC)');
+  const t=document.getElementById('tip');
+  t.textContent=lines.join('\n');t.style.display='block';posTip(e);
+}
+function hideTip(){document.getElementById('tip').style.display='none'}
+function posTip(e){const t=document.getElementById('tip');t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-6)+'px'}
+document.addEventListener('mousemove',e=>{if(document.getElementById('tip').style.display!=='none')posTip(e)});
+
+// ── TOAST ────────────────────────────────────────────────
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ── TABS ────────────────────────────────────────────────
+function switchTab(id){
+  cur=id;
+  document.querySelectorAll('.tb-tab').forEach((t,i)=>
+    t.classList.toggle('on',(i===0&&id==='plan1')||(i===1&&id==='plan2')));
+  render();
+  document.getElementById('chartScroll').scrollLeft=Math.max(0,dayOff(new Date())*DAY_W-200);
+}
+
+// ── INIT ─────────────────────────────────────────────────
+render();
+setTimeout(()=>{
+  document.getElementById('chartScroll').scrollLeft=Math.max(0,dayOff(new Date())*DAY_W-200);
+},60);
+</script>
+
+
+</body></html>
